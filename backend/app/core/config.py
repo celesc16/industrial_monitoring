@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=ENV_FILE,
         env_file_encoding="utf-8",
+        protected_namespaces=("settings_",),
     )
 
     project_name: str = "Sistema de Monitoreo Industrial y Detección de Anomalías"
@@ -31,6 +32,8 @@ class Settings(BaseSettings):
 
     model_path: str = str(BASE_DIR / "ml" / "artifacts" / "model.pkl")
 
+    # Temporal: se reemplazará por autorización ADMIN.
+    demo_controls_enabled: bool = False
 
 @lru_cache()
 def get_settings() -> Settings:

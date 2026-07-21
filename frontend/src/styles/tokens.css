@@ -1,11 +1,12 @@
 :root {
-  /* ==========================
-     Colores
-     ========================== */
-
-  /* Fondo */
   --color-bg: #101418;
   --color-bg-raised: #161b22;
+  --bg-gradient:
+  radial-gradient(
+    circle at top,
+    rgba(59, 130, 246, 0.08) 0%,
+    transparent 40%
+  );
   --color-surface: #1d242d;
   --color-surface-hover: #252d38;
 
@@ -57,12 +58,9 @@ body,
 
 body {
   margin: 0;
+
   background:
-    radial-gradient(
-      circle at top,
-      rgba(59,130,246,.08) 0%,
-      transparent 40%
-    ),
+    var(--bg-gradient),
     var(--color-bg);
 
   color: var(--color-text);
