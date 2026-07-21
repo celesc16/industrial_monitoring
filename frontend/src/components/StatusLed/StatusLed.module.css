@@ -1,0 +1,27 @@
+.led {
+  --led-color: var(--color-text-faint);
+  --led-glow: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--led-color);
+  box-shadow: 0 0 12px 2px var(--led-glow);
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.ledPulse {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.7;
+  }
+}

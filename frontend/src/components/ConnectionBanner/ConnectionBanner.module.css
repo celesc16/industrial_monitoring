@@ -1,0 +1,9 @@
+.banner {
+  background: var(--color-danger-dim);
+  color: #ffb4b4;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}

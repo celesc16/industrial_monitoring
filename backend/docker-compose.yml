@@ -1,0 +1,30 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto-broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    restart: unless-stopped
+
+  backend:
+    build: .
+    container_name: monitoreo-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      MQTT_BROKER: mosquitto
+    volumes:
+      - ./app/ml/artifacts:/code/app/ml/artifacts
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+
+volumes:
+  mosquitto-data:
+  mosquitto-log:
