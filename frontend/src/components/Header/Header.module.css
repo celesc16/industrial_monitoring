@@ -85,3 +85,15 @@
   border-color: var(--color-border);
   color: var(--color-text);
 }
+
+@media (max-width: 650px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topBar,
+  .status {
+    align-items: flex-start;
+  }
+}

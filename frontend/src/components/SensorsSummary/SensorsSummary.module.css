@@ -1,0 +1,85 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 0;
+  padding: 15px 16px;
+
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  width: 38px;
+  height: 38px;
+
+  color: var(--color-primary-light);
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: var(--radius-md);
+
+  font-size: 16px;
+}
+
+.success {
+  color: var(--color-success);
+  background: var(--color-success-dim);
+}
+
+.warning {
+  color: var(--color-temp);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.danger {
+  color: var(--color-danger);
+  background: var(--color-danger-dim);
+}
+
+.label {
+  display: block;
+  margin-bottom: 3px;
+
+  color: var(--color-text-faint);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.value {
+  display: block;
+
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 21px;
+}
+
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 400px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

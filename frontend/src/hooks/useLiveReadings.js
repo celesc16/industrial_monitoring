@@ -4,12 +4,6 @@ import { WS_URL } from "../config";
 const RECONNECT_DELAY_MS = 3000;
 const MAX_POINTS = 60;
 
-/**
- * Se conecta al WebSocket del backend y mantiene:
- * - `points`: las últimas MAX_POINTS lecturas, para el gráfico en vivo
- * - `latest`: la última lectura recibida, para el panel de estado
- * - `connectionStatus`: "connecting" | "open" | "closed"
- */
 export function useLiveReadings() {
   const [points, setPoints] = useState([]);
   const [latest, setLatest] = useState(null);

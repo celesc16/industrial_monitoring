@@ -27,12 +27,13 @@ class SensorOut(BaseModel):
     name: str
     location: str
     description: str | None
-
     is_active: bool
     connection_status: SensorConnectionStatus
     last_seen_at: datetime | None
-
     created_at: datetime
     updated_at: datetime
-
     latest_reading: SensorLatestReading | None
+
+
+class SensorStatusUpdate(BaseModel):
+    is_active: bool

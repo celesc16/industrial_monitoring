@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import StatusLed from "../StatusLed/StatusLed";
-import ThemeToggle from "../ThemeToggle/ThemeToggle";
 import styles from "./Header.module.css";
 
 export default function Header({ isAnomaly, hasSignal, connectionStatus }) {
@@ -25,16 +24,34 @@ export default function Header({ isAnomaly, hasSignal, connectionStatus }) {
       </div>
 
       <div className={styles.topBar}>
-        <ThemeToggle />
         <div className={styles.status}>
-          <div className={`${styles.pill} ${isAnomaly && hasSignal ? styles.pillDanger : styles.pillSuccess}`}>
-            <StatusLed isAnomaly={isAnomaly} hasSignal={hasSignal} />
+          <div
+            className={`${styles.pill} ${
+              isAnomaly && hasSignal
+                ? styles.pillDanger
+                : styles.pillSuccess
+            }`}
+          >
+            <StatusLed
+              isAnomaly={isAnomaly}
+              hasSignal={hasSignal}
+            />
+
             <span>{statusLabel}</span>
           </div>
 
           <div className={styles.meta}>
-            <span className={`${styles.connectionDot} ${styles[`connection-${connectionStatus}`]}`} />
-            <span className={styles.clock}>{now.toLocaleTimeString("es-AR", { hour12: false })}</span>
+            <span
+              className={`${styles.connectionDot} ${
+                styles[`connection-${connectionStatus}`]
+              }`}
+            />
+
+            <span className={styles.clock}>
+              {now.toLocaleTimeString("es-AR", {
+                hour12: false,
+              })}
+            </span>
           </div>
         </div>
       </div>
