@@ -8,8 +8,8 @@ import paho.mqtt.client as mqtt
 
 MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
-MQTT_TOPIC = "sensores/1/datos"
-SENSOR_ID = "1"
+SENSOR_ID = "SENSOR-001"
+MQTT_TOPIC = f"sensores/{SENSOR_ID}/datos"
 INTERVALO_SEGUNDOS = 1
 DURACION_FALLA_SEGUNDOS = 8
 
