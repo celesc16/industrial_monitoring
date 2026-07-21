@@ -10,7 +10,7 @@ __pycache__/
 venv/
 .venv/
 *.db
-app/ml/artifacts/*.pkl
+backend/app/ml/artifacts/*.pkl
 .pytest_cache/
 
 # --- Sistema y Editores ---
