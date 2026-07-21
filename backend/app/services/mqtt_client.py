@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-
+from app.core.exceptions import InactiveSensorError, SensorNotFoundError
 import paho.mqtt.client as mqtt
 
 from app.core.config import settings
@@ -31,13 +31,28 @@ class MQTTHandler:
         try:
             payload = json.loads(msg.payload.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError):
-            logger.error("Mensaje MQTT inválido en topic %s: %r", msg.topic, msg.payload)
+            logger.error(
+                "Mensaje MQTT inválido en topic %s: %r",
+                msg.topic,
+                msg.payload,
+            )
             return
 
+        future = asyncio.run_coroutine_threadsafe(
+            process_reading(payload, self.detector),
+            self.loop,
+        )
+
+        future.add_done_callback(self._handle_processing_result)
+
+    @staticmethod
+    def _handle_processing_result(future) -> None:
         try:
-            asyncio.run_coroutine_threadsafe(
-                process_reading(payload, self.detector), self.loop
-            )
+            future.result()
+        except SensorNotFoundError as exc:
+            logger.warning("Lectura MQTT rechazada: %s", exc)
+        except InactiveSensorError as exc:
+            logger.warning("Lectura MQTT rechazada: %s", exc)
         except Exception:
             logger.exception("Error procesando lectura MQTT")
 
