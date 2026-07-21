@@ -12,7 +12,6 @@ Uso (desde la carpeta backend/):
 import sys
 from pathlib import Path
 
-# Permite importar el paquete `app` al correr este script directamente
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import joblib
