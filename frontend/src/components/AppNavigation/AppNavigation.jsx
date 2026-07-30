@@ -1,7 +1,5 @@
-import { NavLink } from "react-router";
-
+import { NavLink } from "react-router-dom";
 import ThemeToggle from "../ThemeToggle/ThemeToggle";
-
 import styles from "./AppNavigation.module.css";
 
 const NAVIGATION = [
@@ -15,13 +13,21 @@ const NAVIGATION = [
     label: "Sensores",
     icon: "bi-cpu",
   },
+  {
+    to: "/history",
+    label: "Historial",
+    icon: "bi-clock-history",
+  },
 ];
 
 export default function AppNavigation() {
   return (
     <header className={styles.navigation}>
       <div className={styles.inner}>
-        <NavLink to="/dashboard" className={styles.brand}>
+        <NavLink
+          to="/dashboard"
+          className={styles.brand}
+        >
           <span className={styles.brandIcon}>
             <i className="bi bi-activity" />
           </span>
@@ -32,14 +38,19 @@ export default function AppNavigation() {
           </span>
         </NavLink>
 
-        <nav className={styles.links} aria-label="Navegación principal">
+        <nav
+          className={styles.links}
+          aria-label="Navegación principal"
+        >
           {NAVIGATION.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 `${styles.link} ${
-                  isActive ? styles.linkActive : ""
+                  isActive
+                    ? styles.linkActive
+                    : ""
                 }`
               }
             >

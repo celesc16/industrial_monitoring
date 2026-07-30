@@ -1,32 +1,226 @@
 .page {
-  min-height: 100%;
+  width: 100%;
   max-width: 1280px;
+  min-height: 100%;
   margin: 0 auto;
   padding: 28px 32px 60px;
 }
 
-.grid {
+.summaryBlock,
+.sensorBlock {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+}
+
+.summaryBlock {
+  margin-top: 24px;
+  padding: 20px;
+}
+
+.sensorBlock {
+  margin-top: 24px;
+  padding: 22px;
+}
+
+.blockHeader {
+  margin-bottom: 16px;
+}
+
+.blockTitle {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.blockEyebrow {
+  margin: 0 0 6px;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.blockDescription {
+  max-width: 650px;
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sensorBlockHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.selectorContainer {
+  width: min(100%, 330px);
+  flex-shrink: 0;
+}
+
+.sensorDivider {
+  width: 100%;
+  height: 1px;
+  margin: 20px 0 16px;
+  background: var(--color-border);
+}
+
+.sensorIdentity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.sensorIdentityLabel {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sensorIdentityName {
+  display: block;
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.sensorIdentityId {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 29px;
+  padding: 5px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.monitorGrid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns:
+    minmax(0, 1.8fr)
+    minmax(300px, 0.95fr);
   gap: 20px;
   align-items: start;
 }
 
-.side {
+.monitorGrid > * {
+  min-width: 0;
+}
+
+.sideColumn {
   display: flex;
   flex-direction: column;
+  gap: 14px;
+}
+
+.sideColumn :global(.panel) {
+  height: auto;
+}
+
+.anomaliesSection {
+  margin-top: 30px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 20px;
+  margin-bottom: 14px;
 }
 
-.tableSection {
-  margin-top: 20px;
+.historyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 15px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-@media (max-width: 900px) {
-  .grid {
+.historyButton:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+.historyButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 960px) {
+  .sensorBlockHeader {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .selectorContainer {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .monitorGrid {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 700px) {
   .page {
-    padding: 20px 16px 40px;
+    padding: 20px 16px 44px;
+  }
+
+  .summaryBlock,
+  .sensorBlock {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .sensorIdentity {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sectionHeader {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .historyButton {
+    width: 100%;
   }
 }

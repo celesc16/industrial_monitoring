@@ -1,39 +1,108 @@
+import {
+  formatDate,
+  formatTime,
+} from "../../utils/formatDate";
+import { formatNumber } from "../../utils/formatNumber";
 import styles from "./HistoryTable.module.css";
 
-export default function HistoryTable({ anomalies }) {
+export default function HistoryTable({
+  readings = [],
+  title = "Historial de lecturas",
+  emptyMessage = "No se encontraron lecturas.",
+  loading = false,
+  showStatus = true,
+}) {
   return (
     <div className="panel">
-      <div className="panel__header">
-        <h2 className="panel__title">Histórico de anomalías</h2>
-        <span className="panel__subtitle">últimas {anomalies.length} detectadas</span>
-      </div>
+      {(title || readings.length > 0) && (
+        <div className="panel__header">
+          {title && (
+            <h2 className="panel__title">
+              {title}
+            </h2>
+          )}
 
-      {anomalies.length === 0 ? (
-        <div className="empty-state">Todavía no se registraron anomalías. Buena señal.</div>
+          <span className="panel__subtitle">
+            {readings.length} en esta página
+          </span>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="empty-state">
+          Cargando historial…
+        </div>
+      ) : readings.length === 0 ? (
+        <div className="empty-state">
+          {emptyMessage}
+        </div>
       ) : (
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
+                <th>Fecha</th>
                 <th>Hora</th>
                 <th>Sensor</th>
-                <th>Temp.</th>
+                <th>Temperatura</th>
                 <th>Vibración</th>
                 <th>Presión</th>
-                <th>Score</th>
+
+                {showStatus && (
+                  <th>Estado</th>
+                )}
               </tr>
             </thead>
+
             <tbody>
-              {anomalies.map((row) => (
+              {readings.map((row) => (
                 <tr key={row.id}>
                   <td className="mono">
-                    {new Date(row.timestamp).toLocaleTimeString("es-AR", { hour12: false })}
+                    {formatDate(row.timestamp)}
                   </td>
+
+                  <td className="mono">
+                    {formatTime(row.timestamp)}
+                  </td>
+
                   <td>{row.sensor_id}</td>
-                  <td className="mono">{row.temperature}°C</td>
-                  <td className="mono">{row.vibration}</td>
-                  <td className="mono">{row.pressure}</td>
-                  <td className={`mono ${styles.score}`}>{row.anomaly_score}</td>
+
+                  <td className="mono">
+                    {formatNumber(
+                      row.temperature
+                    )}{" "}
+                    °C
+                  </td>
+
+                  <td className="mono">
+                    {formatNumber(
+                      row.vibration
+                    )}{" "}
+                    mm/s
+                  </td>
+
+                  <td className="mono">
+                    {formatNumber(
+                      row.pressure
+                    )}{" "}
+                    kPa
+                  </td>
+
+                  {showStatus && (
+                    <td>
+                      <span
+                        className={
+                          row.is_anomaly
+                            ? styles.anomalyBadge
+                            : styles.normalBadge
+                        }
+                      >
+                        {row.is_anomaly
+                          ? "Anomalía"
+                          : "Normal"}
+                      </span>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

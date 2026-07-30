@@ -4,7 +4,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 class SensorReadingIn(BaseModel):
-
     sensor_id: str
     temperature: float
     vibration: float
@@ -12,8 +11,9 @@ class SensorReadingIn(BaseModel):
 
 
 class ReadingOut(BaseModel):
-
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
     id: int
     timestamp: datetime
@@ -27,7 +27,9 @@ class ReadingOut(BaseModel):
 
 
 class LatestReading(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
     sensor_id: str
     temperature: float
@@ -41,4 +43,16 @@ class StatsOut(BaseModel):
     total_readings: int
     total_anomalies: int
     anomalies_last_24h: int
-    latest_reading: LatestReading | None
+    latest_reading: LatestReading | None = None
+
+
+class PaginationOut(BaseModel):
+    page: int
+    page_size: int
+    total_items: int
+    total_pages: int
+
+
+class ReadingsPageOut(BaseModel):
+    items: list[ReadingOut]
+    pagination: PaginationOut

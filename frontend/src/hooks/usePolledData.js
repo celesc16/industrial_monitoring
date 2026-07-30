@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getReadings, getStats } from "../api/client";
+
+import {
+  getReadings,
+  getStats,
+} from "../api/client";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -13,27 +17,55 @@ export function usePolledData() {
 
     async function fetchAll() {
       try {
-        const [statsData, anomaliesData] = await Promise.all([
-          getStats(),
-          getReadings({ limit: 25, onlyAnomalies: true }),
-        ]);
-        if (!cancelled) {
-          setStats(statsData);
-          setAnomalies(anomaliesData.reverse()); // más reciente primero en la tabla
-          setError(null);
+        const [statsData, anomaliesData] =
+          await Promise.all([
+            getStats(),
+            getReadings({
+              page: 1,
+              pageSize: 5,
+              isAnomaly: true,
+            }),
+          ]);
+
+        if (cancelled) {
+          return;
         }
+
+        setStats(statsData);
+
+        setAnomalies(
+          Array.isArray(anomaliesData.items)
+            ? anomaliesData.items
+            : []
+        );
+
+        setError(null);
       } catch (err) {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) {
+          setError(
+            err.message ||
+              "No se pudieron cargar los datos del dashboard."
+          );
+        }
       }
     }
 
     fetchAll();
-    const interval = setInterval(fetchAll, POLL_INTERVAL_MS);
+
+    const interval = setInterval(
+      fetchAll,
+      POLL_INTERVAL_MS
+    );
+
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
   }, []);
 
-  return { stats, anomalies, error };
+  return {
+    stats,
+    anomalies,
+    error,
+  };
 }
