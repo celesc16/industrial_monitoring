@@ -5,7 +5,10 @@ import {
   useState,
 } from "react";
 
-import { getReadings } from "../api/client";
+import {
+  exportReadingsCsv,
+  getReadings,
+} from "../api/client";
 
 const AUTO_REFRESH_INTERVAL_MS = 5000;
 
@@ -35,19 +38,50 @@ function parseAnomalyFilter(status) {
   return null;
 }
 
+function createCsvFilename() {
+  const now = new Date();
+
+  const pad = (value) =>
+    String(value).padStart(2, "0");
+
+  const timestamp = [
+    now.getFullYear(),
+    pad(now.getMonth() + 1),
+    pad(now.getDate()),
+  ].join("");
+
+  const time = [
+    pad(now.getHours()),
+    pad(now.getMinutes()),
+    pad(now.getSeconds()),
+  ].join("");
+
+  return `lecturas_industriales_${timestamp}_${time}.csv`;
+}
+
 export function useReadings() {
   const [readings, setReadings] = useState([]);
+
   const [pagination, setPagination] = useState(
     INITIAL_PAGINATION
   );
+
   const [filters, setFilters] = useState(
     INITIAL_FILTERS
   );
 
   const [loading, setLoading] = useState(true);
+
   const [refreshing, setRefreshing] =
     useState(false);
+
+  const [exporting, setExporting] =
+    useState(false);
+
   const [error, setError] = useState(null);
+
+  const [exportError, setExportError] =
+    useState(null);
 
   const mountedRef = useRef(true);
   const requestIdRef = useRef(0);
@@ -135,7 +169,6 @@ export function useReadings() {
     []
   );
 
-  // Carga inicial al entrar a la página.
   useEffect(() => {
     loadReadings({
       page: INITIAL_PAGINATION.page,
@@ -145,7 +178,6 @@ export function useReadings() {
     });
   }, [loadReadings]);
 
-  // Actualización automática solo en la primera página.
   useEffect(() => {
     if (
       loading ||
@@ -185,6 +217,7 @@ export function useReadings() {
   const applyFilters = useCallback(
     async (newFilters) => {
       setFilters(newFilters);
+      setExportError(null);
 
       await loadReadings({
         page: 1,
@@ -200,6 +233,7 @@ export function useReadings() {
 
   const clearFilters = useCallback(async () => {
     setFilters(INITIAL_FILTERS);
+    setExportError(null);
 
     await loadReadings({
       page: 1,
@@ -263,17 +297,68 @@ export function useReadings() {
     pagination.page_size,
   ]);
 
+  const exportCsv = useCallback(async () => {
+    setExporting(true);
+    setExportError(null);
+
+    try {
+      const csvBlob = await exportReadingsCsv({
+        sensorId: filters.sensorId,
+        isAnomaly: parseAnomalyFilter(
+          filters.status
+        ),
+        dateFrom: filters.dateFrom,
+        dateTo: filters.dateTo,
+      });
+
+      if (!mountedRef.current) {
+        return;
+      }
+
+      const downloadUrl =
+        window.URL.createObjectURL(csvBlob);
+
+      const downloadLink =
+        document.createElement("a");
+
+      downloadLink.href = downloadUrl;
+      downloadLink.download = createCsvFilename();
+
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      if (!mountedRef.current) {
+        return;
+      }
+
+      setExportError(
+        err.message ||
+          "No se pudo exportar el historial."
+      );
+    } finally {
+      if (mountedRef.current) {
+        setExporting(false);
+      }
+    }
+  }, [filters]);
+
   return {
     readings,
     pagination,
     filters,
     loading,
     refreshing,
+    exporting,
     error,
+    exportError,
     applyFilters,
     clearFilters,
     changePage,
     changePageSize,
     refresh,
+    exportCsv,
   };
 }

@@ -1,10 +1,15 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
+from pydantic_settings import (
+    BaseSettings,
+    SettingsConfigDict,
+)
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-ENV_FILE = BASE_DIR.parent / ".env" 
+ENV_FILE = BASE_DIR.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -14,10 +19,18 @@ class Settings(BaseSettings):
         protected_namespaces=("settings_",),
     )
 
-    project_name: str = "Sistema de Monitoreo Industrial y Detección de Anomalías"
+    project_name: str = (
+        "Sistema de Monitoreo Industrial "
+        "y Detección de Anomalías"
+    )
+
     api_v1_prefix: str = "/api/v1"
 
     cors_origins: list[str] = ["*"]
+
+    app_time_zone: str = (
+        "America/Argentina/Mendoza"
+    )
 
     mqtt_broker: str = "localhost"
     mqtt_port: int = 1883
@@ -25,15 +38,33 @@ class Settings(BaseSettings):
 
     sensor_offline_seconds: int = 10
 
-    database_url: str = "sqlite:///./monitoreo.db"
+    database_url: str = (
+        "sqlite:///./monitoreo.db"
+    )
+
+    readings_db_batch_size: int = Field(
+        default=1000,
+        ge=1,
+    )
+
+    readings_csv_batch_size: int = Field(
+        default=1000,
+        ge=1,
+    )
 
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
 
-    model_path: str = str(BASE_DIR / "ml" / "artifacts" / "model.pkl")
+    model_path: str = str(
+        BASE_DIR /
+        "ml" /
+        "artifacts" /
+        "model.pkl"
+    )
 
     # Temporal: se reemplazará por autorización ADMIN.
     demo_controls_enabled: bool = False
+
 
 @lru_cache()
 def get_settings() -> Settings:
