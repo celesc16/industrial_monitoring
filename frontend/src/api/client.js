@@ -15,20 +15,52 @@ async function request(path, options = {}) {
   return response.json();
 }
 
-export function getStats(options = {}) {
-  return request("/stats", options);
+export function getStats({
+  sensorId = "",
+} = {}) {
+  const params = new URLSearchParams();
+
+  if (sensorId) {
+    params.set("sensor_id", sensorId);
+  }
+
+  const query = params.toString();
+
+  return request(
+    `/stats${query ? `?${query}` : ""}`
+  );
 }
 
-export function getReadings(
-  { limit = 100, onlyAnomalies = false } = {},
-  options = {}
-) {
-  const params = new URLSearchParams({
-    limit: String(limit),
-    only_anomalies: String(onlyAnomalies),
-  });
+export function getReadings({
+  page = 1,
+  pageSize = 20,
+  sensorId = "",
+  isAnomaly = null,
+  dateFrom = "",
+  dateTo = "",
+} = {}) {
+  const params = new URLSearchParams();
 
-  return request(`/readings?${params.toString()}`, options);
+  params.set("page", String(page));
+  params.set("page_size", String(pageSize));
+
+  if (sensorId) {
+    params.set("sensor_id", sensorId);
+  }
+
+  if (isAnomaly !== null) {
+    params.set("is_anomaly", String(isAnomaly));
+  }
+
+  if (dateFrom) {
+    params.set("date_from", dateFrom);
+  }
+
+  if (dateTo) {
+    params.set("date_to", dateTo);
+  }
+
+  return request(`/readings?${params.toString()}`);
 }
 
 export function getSensors(options = {}) {

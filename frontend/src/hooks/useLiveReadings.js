@@ -1,15 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import { WS_URL } from "../config";
 
 const RECONNECT_DELAY_MS = 3000;
-const MAX_POINTS = 60;
+const MAX_POINTS_PER_SENSOR = 60;
 
 export function useLiveReadings() {
-  const [points, setPoints] = useState([]);
-  const [latest, setLatest] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState("connecting");
+  const [pointsBySensor, setPointsBySensor] = useState({});
+  const [latestBySensor, setLatestBySensor] = useState({});
+  const [connectionStatus, setConnectionStatus] =
+    useState("connecting");
+
   const socketRef = useRef(null);
-  const reconnectTimer = useRef(null);
+  const reconnectTimerRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -18,42 +21,78 @@ export function useLiveReadings() {
       if (cancelled) return;
 
       setConnectionStatus("connecting");
+
       const socket = new WebSocket(WS_URL);
       socketRef.current = socket;
 
-      socket.onopen = () => setConnectionStatus("open");
+      socket.onopen = () => {
+        setConnectionStatus("open");
+      };
 
       socket.onmessage = (event) => {
         try {
           const reading = JSON.parse(event.data);
-          setLatest(reading);
-          setPoints((prev) => {
-            const next = [...prev, reading];
-            return next.length > MAX_POINTS ? next.slice(next.length - MAX_POINTS) : next;
+          const sensorId = reading.sensor_id;
+
+          if (!sensorId) return;
+
+          setLatestBySensor((current) => ({
+            ...current,
+            [sensorId]: reading,
+          }));
+
+          setPointsBySensor((current) => {
+            const sensorPoints = current[sensorId] ?? [];
+            const nextPoints = [...sensorPoints, reading];
+
+            return {
+              ...current,
+              [sensorId]:
+                nextPoints.length > MAX_POINTS_PER_SENSOR
+                  ? nextPoints.slice(-MAX_POINTS_PER_SENSOR)
+                  : nextPoints,
+            };
           });
         } catch {
-          // mensaje no-JSON, se ignora
+          // Los mensajes que no sean JSON se ignoran.
         }
       };
 
       socket.onclose = () => {
         setConnectionStatus("closed");
+
         if (!cancelled) {
-          reconnectTimer.current = setTimeout(connect, RECONNECT_DELAY_MS);
+          reconnectTimerRef.current = setTimeout(
+            connect,
+            RECONNECT_DELAY_MS
+          );
         }
       };
 
-      socket.onerror = () => socket.close();
+      socket.onerror = () => {
+        socket.close();
+      };
     }
 
     connect();
 
     return () => {
       cancelled = true;
-      clearTimeout(reconnectTimer.current);
+
+      clearTimeout(reconnectTimerRef.current);
       socketRef.current?.close();
     };
   }, []);
 
-  return { points, latest, connectionStatus };
+  const connectedSensorIds = useMemo(
+    () => Object.keys(latestBySensor),
+    [latestBySensor]
+  );
+
+  return {
+    pointsBySensor,
+    latestBySensor,
+    connectedSensorIds,
+    connectionStatus,
+  };
 }

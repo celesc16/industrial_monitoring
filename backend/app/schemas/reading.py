@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class SensorReadingIn(BaseModel):
@@ -11,7 +11,9 @@ class SensorReadingIn(BaseModel):
 
 
 class ReadingOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
     id: int
     timestamp: datetime
@@ -25,7 +27,9 @@ class ReadingOut(BaseModel):
 
 
 class LatestReading(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
     sensor_id: str
     temperature: float
@@ -39,7 +43,7 @@ class StatsOut(BaseModel):
     total_readings: int
     total_anomalies: int
     anomalies_last_24h: int
-    latest_reading: LatestReading | None
+    latest_reading: LatestReading | None = None
 
 
 class PaginationOut(BaseModel):
