@@ -14,12 +14,15 @@ export default function HistoryPage() {
     filters,
     loading,
     refreshing,
+    exporting,
     error,
+    exportError,
     applyFilters,
     clearFilters,
     changePage,
     changePageSize,
     refresh,
+    exportCsv,
   } = useReadings();
 
   const {
@@ -28,11 +31,22 @@ export default function HistoryPage() {
     error: sensorsError,
   } = useSensors();
 
-  const pageError = error || sensorsError;
-  const isBusy =
+  const pageError =
+    error ||
+    sensorsError ||
+    exportError;
+
+  const filtersBusy =
     loading ||
     refreshing ||
     sensorsLoading;
+
+  const actionsBusy =
+    filtersBusy ||
+    exporting;
+
+  const hasResults =
+    pagination.total_items > 0;
 
   return (
     <div className={styles.page}>
@@ -52,30 +66,56 @@ export default function HistoryPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          className={styles.refreshButton}
-          onClick={refresh}
-          disabled={isBusy}
-        >
-          <i
-            className={`bi bi-arrow-clockwise ${
-              refreshing
-                ? styles.rotating
-                : ""
-            }`}
-          />
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.exportButton}
+            onClick={exportCsv}
+            disabled={
+              actionsBusy ||
+              !hasResults
+            }
+          >
+            <i
+              className={
+                exporting
+                  ? "bi bi-hourglass-split"
+                  : "bi bi-download"
+              }
+            />
 
-          {refreshing
-            ? "Actualizando..."
-            : "Actualizar"}
-        </button>
+            {exporting
+              ? "Exportando..."
+              : "Exportar CSV"}
+          </button>
+
+          <button
+            type="button"
+            className={styles.refreshButton}
+            onClick={refresh}
+            disabled={actionsBusy}
+          >
+            <i
+              className={`bi bi-arrow-clockwise ${
+                refreshing
+                  ? styles.rotating
+                  : ""
+              }`}
+            />
+
+            {refreshing
+              ? "Actualizando..."
+              : "Actualizar"}
+          </button>
+        </div>
       </header>
 
       {pageError && (
         <ConnectionBanner>
-          No se pudo cargar el historial:
-          {" "}
+          {exportError
+            ? "No se pudo exportar el historial: "
+            : "No se pudo cargar el historial: "}
+
           {pageError}
         </ConnectionBanner>
       )}
@@ -84,7 +124,7 @@ export default function HistoryPage() {
         <HistoryFilters
           sensors={sensors}
           filters={filters}
-          loading={isBusy}
+          loading={filtersBusy}
           onApply={applyFilters}
           onClear={clearFilters}
         />
@@ -111,11 +151,11 @@ export default function HistoryPage() {
         </div>
 
         <HistoryTable
-            readings={readings}
-            loading={loading}
-            title=""
-            emptyMessage="No se encontraron lecturas con los filtros seleccionados."
-            showStatus={true}
+          readings={readings}
+          loading={loading}
+          title=""
+          emptyMessage="No se encontraron lecturas con los filtros seleccionados."
+          showStatus={true}
         />
 
         <HistoryPagination
