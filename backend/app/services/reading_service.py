@@ -7,25 +7,21 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.reading import Reading
 
 
-MENDOZA_TIME_ZONE = ZoneInfo(
-    "America/Argentina/Mendoza"
+LOCAL_TIME_ZONE = ZoneInfo(
+    settings.app_time_zone
 )
 
-DB_BATCH_SIZE = 1000
-CSV_BATCH_SIZE = 1000
+DB_BATCH_SIZE = settings.readings_db_batch_size
+CSV_BATCH_SIZE = settings.readings_csv_batch_size
 
 
 def normalize_filter_datetime(
     value: datetime | None,
 ) -> datetime | None:
-    """
-    Convierte fechas con zona horaria a UTC sin
-    tzinfo, que es el formato utilizado actualmente
-    por Reading.timestamp.
-    """
     if value is None:
         return None
 
@@ -39,20 +35,16 @@ def normalize_filter_datetime(
     )
 
 
-def to_mendoza_datetime(
+def to_local_datetime(
     value: datetime,
 ) -> datetime:
-    """
-    Interpreta los timestamps sin tzinfo como UTC
-    y los convierte al horario de Mendoza.
-    """
     if value.tzinfo is None:
         value = value.replace(
             tzinfo=timezone.utc
         )
 
     return value.astimezone(
-        MENDOZA_TIME_ZONE
+        LOCAL_TIME_ZONE
     )
 
 
@@ -63,10 +55,6 @@ def apply_reading_filters(
     date_from: datetime | None = None,
     date_to: datetime | None = None,
 ):
-    """
-    Aplica los filtros compartidos por el historial
-    paginado y la exportación CSV.
-    """
     date_from = normalize_filter_datetime(
         date_from
     )
@@ -107,10 +95,6 @@ def get_readings_page(
     date_from: datetime | None = None,
     date_to: datetime | None = None,
 ):
-    """
-    Obtiene una página de lecturas junto con
-    la información de paginación.
-    """
     query = apply_reading_filters(
         query=db.query(Reading),
         sensor_id=sensor_id,
@@ -157,10 +141,6 @@ def get_readings_for_export(
     date_from: datetime | None = None,
     date_to: datetime | None = None,
 ):
-    """
-    Obtiene todas las lecturas coincidentes sin
-    aplicar la paginación de la tabla.
-    """
     query = apply_reading_filters(
         query=db.query(Reading),
         sensor_id=sensor_id,
@@ -183,10 +163,6 @@ def format_decimal(
     value: float,
     decimals: int,
 ) -> str:
-    """
-    Formatea números con coma decimal para Excel
-    configurado en español.
-    """
     return (
         f"{value:.{decimals}f}"
         .replace(".", ",")
@@ -196,12 +172,8 @@ def format_decimal(
 def generate_readings_csv(
     readings: Iterable[Reading],
 ) -> Iterator[str]:
-    """
-    Genera progresivamente el CSV en bloques.
-    """
     buffer = io.StringIO(newline="")
 
-    # Permite que Excel reconozca UTF-8.
     buffer.write("\ufeff")
 
     writer = csv.writer(
@@ -225,10 +197,8 @@ def generate_readings_csv(
         readings,
         start=1,
     ):
-        local_timestamp = (
-            to_mendoza_datetime(
-                reading.timestamp
-            )
+        local_timestamp = to_local_datetime(
+            reading.timestamp
         )
 
         formatted_time = (
@@ -279,12 +249,8 @@ def generate_readings_csv(
 
 
 def create_readings_csv_filename() -> str:
-    """
-    Crea el nombre del archivo utilizando
-    la fecha y hora local de Mendoza.
-    """
     local_now = datetime.now(
-        MENDOZA_TIME_ZONE
+        LOCAL_TIME_ZONE
     )
 
     return (
