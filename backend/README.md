@@ -68,6 +68,31 @@ uvicorn app.main:app --reload --port 8000
 - Salud: `GET http://localhost:8000/api/v1/health`
 - Docs interactivas (Swagger): `http://localhost:8000/docs`
 
+### Autenticación y roles (RBAC)
+
+Al iniciar la app se crean automáticamente dos cuentas demo si no existen:
+
+| Rol      | Email               | Contraseña | Permisos                                                  |
+|----------|---------------------|------------|-----------------------------------------------------------|
+| ADMIN    | `admin@demo.com`    | `1234`     | Consultas + activar/desactivar sensores (controles demo)  |
+| VIEWER   | `operario@demo.com` | `1234`     | Consultas (solo lectura)                                  |
+
+Obtener un token JWT:
+
+```bash
+curl -X POST http://localhost:8000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@demo.com", "password": "1234"}'
+```
+
+Devuelve `access_token`, `role` y `email`. Incluí el token en el header
+`Authorization: Bearer <token>` para acceder a rutas protegidas, por
+ejemplo `PATCH /api/v1/sensors/{id}/status` (solo ADMIN).
+
+- Sin token → `401`.
+- Token de un rol `VIEWER` en ruta de administrador → `403`.
+- Token inválido o expirado → `401`.
+
 ## 6. Probar de punta a punta
 
 **Opción A — con el simulador real (MQTT):**

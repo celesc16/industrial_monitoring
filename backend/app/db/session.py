@@ -24,8 +24,8 @@ SessionLocal = sessionmaker(
 def init_db() -> None:
     from app.db.base import Base
 
-    from app.models import Reading, Sensor  # noqa: F401
-    from app.db.seed import seed_sensors
+    from app.models import Reading, Sensor, User  # noqa: F401
+    from app.db.seed import seed_sensors, seed_users
 
     Base.metadata.create_all(bind=engine)
 
@@ -33,6 +33,7 @@ def init_db() -> None:
 
     try:
         seed_sensors(db)
+        seed_users(db)
     finally:
         db.close()
 
