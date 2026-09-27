@@ -9,6 +9,7 @@ import ConnectionBanner from "../../components/ConnectionBanner/ConnectionBanner
 import Header from "../../components/Header/Header";
 import HistoryTable from "../../components/HistoryTable/HistoryTable";
 import LiveChart from "../../components/LiveChart/LiveChart";
+import MaintenanceWidget from "../../components/MaintenanceWidget/MaintenanceWidget";
 import SensorReadout from "../../components/SensorReadout/SensorReadout";
 import SensorSelector from "../../components/SensorSelector/SensorSelector";
 import SensorStatsCards from "../../components/SensorStatsCards/SensorStatsCards";
@@ -128,6 +129,10 @@ export default function DashboardPage() {
         </div>
 
         <StatsCards stats={stats} />
+      </section>
+
+      <section className={styles.maintenanceSection}>
+        <MaintenanceWidget />
       </section>
 
       <section className={styles.sensorBlock}>

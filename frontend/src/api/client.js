@@ -114,6 +114,19 @@ export function getSensor(sensorId, options = {}) {
   return request(`/sensors/${encodeURIComponent(sensorId)}`, options);
 }
 
+export function getMaintenanceSchedule(sensorId, config = {}) {
+  return request(
+    `/maintenance/sensors/${encodeURIComponent(sensorId)}/schedule`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(config),
+    }
+  );
+}
+
 export function updateSensorStatus(sensorId, isActive) {
   return request(`/sensors/${encodeURIComponent(sensorId)}/status`, {
     method: "PATCH",

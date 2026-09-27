@@ -7,6 +7,7 @@ import DashboardPage from "./pages/DashboardPage/DashboardPage";
 import SensorsPage from "./pages/SensorsPage/SensorsPage";
 import HistoryPage from "./pages/HistoryPage/HistoryPage";
 import LoginPage from "./pages/LoginPage/LoginPage";
+import MaintenancePage from "./pages/MaintenancePage/MaintenancePage";
 
 function RequireAuth({ children }) {
   const { session } = useAuth();
@@ -50,6 +51,11 @@ export default function App() {
         <Route
           path="/history"
           element={<HistoryPage />}
+        />
+
+        <Route
+          path="/maintenance"
+          element={<MaintenancePage />}
         />
 
         <Route

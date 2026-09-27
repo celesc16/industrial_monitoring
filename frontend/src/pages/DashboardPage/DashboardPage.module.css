@@ -138,6 +138,10 @@
   margin-top: 30px;
 }
 
+.maintenanceSection {
+  margin-top: 24px;
+}
+
 .sectionHeader {
   display: flex;
   align-items: flex-end;
