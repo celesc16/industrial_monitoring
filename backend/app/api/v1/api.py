@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     health,
+    maintenance,
     readings,
     sensors,
     simulate,
@@ -11,6 +12,7 @@ from app.api.v1.endpoints import (
 api_router = APIRouter()
 
 api_router.include_router(health.router)
+api_router.include_router(maintenance.router)
 api_router.include_router(readings.router)
 api_router.include_router(sensors.router)
 api_router.include_router(simulate.router)
