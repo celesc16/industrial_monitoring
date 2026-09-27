@@ -62,8 +62,11 @@ class Settings(BaseSettings):
         "model.pkl"
     )
 
-    # Temporal: se reemplazará por autorización ADMIN.
-    demo_controls_enabled: bool = False
+    jwt_secret: str = (
+        "dev-secret-change-me-in-production"
+    )
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 480
 
 
 @lru_cache()

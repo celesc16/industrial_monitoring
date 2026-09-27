@@ -1,0 +1,281 @@
+.widget {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
+
+  padding: 20px 22px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.retryButton,
+.planButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 38px;
+  padding: 8px 13px;
+
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.retryButton {
+  width: 38px;
+  padding: 0;
+}
+
+.retryButton:hover,
+.planButton:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface-hover);
+}
+
+.retryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinning {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+
+  color: #ffb4b4;
+  background: var(--color-danger-dim);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+
+  font-size: 13px;
+}
+
+.empty {
+  margin: 0;
+  padding: 26px 0;
+  color: var(--color-text-faint);
+  text-align: center;
+  font-size: 14px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: center;
+
+  padding: 12px 14px;
+
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.urgencyDot {
+  grid-row: 1 / 3;
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 999px;
+}
+
+.urgencyDot.healthy,
+.urgencyDot.critical,
+.urgencyDot.warning {
+  grid-row: 1;
+  align-self: center;
+  margin-top: 8px;
+}
+
+.urgencyDot.healthy {
+  background: var(--color-success);
+  box-shadow: 0 0 10px var(--color-success-glow);
+}
+
+.urgencyDot.warning {
+  background: var(--color-temp);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
+}
+
+.urgencyDot.critical {
+  background: var(--color-danger);
+  box-shadow: 0 0 10px var(--color-danger-glow);
+}
+
+.rowIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowIdentity strong {
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowIdentity span {
+  color: var(--color-text-faint);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.rowMetric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.rowMetricValue {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--color-text);
+}
+
+.rowMetricLabel {
+  color: var(--color-text-faint);
+  font-size: 11px;
+}
+
+.rowBar {
+  grid-column: 1 / -1;
+
+  height: 6px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+  background: var(--color-surface-hover);
+}
+
+.rowBar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.rowBar.healthy span {
+  background: var(--color-success);
+}
+
+.rowBar.warning span {
+  background: var(--color-temp);
+}
+
+.rowBar.critical span {
+  background: var(--color-danger);
+}
+
+.skeletonRow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeletonRow span {
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-surface-hover) 50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .planButton {
+    flex: 1;
+  }
+}

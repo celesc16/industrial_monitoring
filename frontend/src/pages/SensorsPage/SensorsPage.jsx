@@ -1,16 +1,21 @@
 import { useState } from "react";
 
+import { ForbiddenError } from "../../api/errors";
+import { useAuth } from "../../auth/AuthContext";
 import ConfirmDialog from "../../components/ConfirmDialog/ConfirmDialog";
 import ConnectionBanner from "../../components/ConnectionBanner/ConnectionBanner";
 import SensorCard from "../../components/SensorCard/SensorCard";
 import SensorsSummary from "../../components/SensorsSummary/SensorsSummary";
-import { DEMO_CONTROLS_ENABLED } from "../../config";
+import { useToast } from "../../components/Toast/ToastContext";
 import { useSensors } from "../../hooks/useSensors";
 
 import styles from "./SensorsPage.module.css";
 
 export default function SensorsPage() {
   const [selectedSensor, setSelectedSensor] = useState(null);
+
+  const { session } = useAuth();
+  const { showToast } = useToast();
 
   const {
     sensors,
@@ -34,11 +39,20 @@ export default function SensorsPage() {
       );
 
       setSelectedSensor(null);
-    } catch {
+    } catch (err) {
       /*
-       * El error ya queda almacenado en useSensors
-       * y se muestra mediante ConnectionBanner.
+       * A 403 means the role has no permission for this action.
+       * We surface a visual toast without breaking the rest of
+       * the page (the confirm dialog is simply closed).
        */
+      if (err instanceof ForbiddenError) {
+        showToast(
+          err.message || "Acceso denegado: Se requieren permisos de Administrador",
+          "error"
+        );
+      }
+
+      setSelectedSensor(null);
     }
   }
 
@@ -130,7 +144,7 @@ export default function SensorsPage() {
               <SensorCard
                 key={sensor.id}
                 sensor={sensor}
-                showDemoControls={DEMO_CONTROLS_ENABLED}
+                showDemoControls={session?.role === "ADMIN"}
                 isUpdating={updatingSensorId === sensor.id}
                 onRequestStatusChange={setSelectedSensor}
               />

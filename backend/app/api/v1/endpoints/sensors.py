@@ -3,9 +3,10 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
+from app.api.deps import get_current_admin_user
 from app.db.session import get_db
 from app.models.sensor import Sensor
+from app.models.user import User
 from app.schemas.sensor import SensorOut, SensorStatusUpdate
 from app.services.sensor_service import serialize_sensor
 from app.services.telegram_bot import (
@@ -64,13 +65,8 @@ async def update_sensor_status(
     sensor_id: str,
     payload: SensorStatusUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
 ):
-    if not settings.demo_controls_enabled:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Los controles de demostración están deshabilitados.",
-        )
-
     sensor = db.get(Sensor, sensor_id)
 
     if sensor is None:
