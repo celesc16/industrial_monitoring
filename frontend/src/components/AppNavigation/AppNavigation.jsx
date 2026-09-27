@@ -1,5 +1,8 @@
 import { NavLink } from "react-router-dom";
+
+import { useAuth } from "../../auth/AuthContext";
 import ThemeToggle from "../ThemeToggle/ThemeToggle";
+
 import styles from "./AppNavigation.module.css";
 
 const NAVIGATION = [
@@ -20,7 +23,17 @@ const NAVIGATION = [
   },
 ];
 
+const ROLE_LABELS = {
+  ADMIN: "Administrador",
+  VIEWER: "Operario",
+};
+
 export default function AppNavigation() {
+  const { session, logout } = useAuth();
+
+  const roleLabel =
+    ROLE_LABELS[session?.role] ?? session?.role ?? "";
+
   return (
     <header className={styles.navigation}>
       <div className={styles.inner}>
@@ -61,7 +74,30 @@ export default function AppNavigation() {
         </nav>
 
         <div className={styles.actions}>
+          {roleLabel && (
+            <span className={styles.roleBadge}>
+              <i
+                className={`bi ${
+                  session?.role === "ADMIN"
+                    ? "bi-person-gear"
+                    : "bi-person"
+                }`}
+                aria-hidden="true"
+              />
+              {roleLabel}
+            </span>
+          )}
+
           <ThemeToggle />
+
+          <button
+            type="button"
+            className={styles.logout}
+            onClick={logout}
+            title="Cerrar sesión"
+          >
+            <i className="bi bi-box-arrow-right" />
+          </button>
         </div>
       </div>
     </header>

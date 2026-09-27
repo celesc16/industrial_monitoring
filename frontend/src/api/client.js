@@ -1,4 +1,6 @@
 import { API_V1 } from "../config";
+import { ForbiddenError } from "./errors";
+import { getStoredToken } from "../auth/auth";
 
 function toBackendUtcDate(value) {
   if (!value) {
@@ -6,10 +8,9 @@ function toBackendUtcDate(value) {
   }
 
   /*
-   * datetime-local entrega una hora local.
-   * La convertimos a UTC y quitamos la Z porque
-   * PostgreSQL guarda actualmente timestamps UTC
-   * sin información de zona horaria.
+   * datetime-local renders a local time.
+   * We convert it to UTC and drop the Z because the DB stores
+   * UTC timestamps without timezone information.
    */
   const date = new Date(value);
 
@@ -17,29 +18,51 @@ function toBackendUtcDate(value) {
     return "";
   }
 
-  return date
-    .toISOString()
-    .replace("Z", "");
+  return date.toISOString().replace("Z", "");
+}
+
+function mergeHeaders(options = {}) {
+  const headers = new Headers(options.headers ?? {});
+
+  const token = getStoredToken();
+
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  return headers;
+}
+
+async function buildRequestError(response, path) {
+  const errorPayload = await response.json().catch(() => null);
+
+  const detail =
+    errorPayload?.detail ||
+    (response.status === 403
+      ? "Acceso denegado: Se requieren permisos de Administrador."
+      : `Error ${response.status} consultando ${path}`);
+
+  if (response.status === 403) {
+    return new ForbiddenError(detail);
+  }
+
+  return new Error(detail);
 }
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_V1}${path}`, options);
+  const response = await fetch(`${API_V1}${path}`, {
+    ...options,
+    headers: mergeHeaders(options),
+  });
 
   if (!response.ok) {
-    const errorPayload = await response.json().catch(() => null);
-
-    throw new Error(
-      errorPayload?.detail ||
-        `Error ${response.status} consultando ${path}`
-    );
+    throw await buildRequestError(response, path);
   }
 
   return response.json();
 }
 
-export function getStats({
-  sensorId = "",
-} = {}) {
+export function getStats({ sensorId = "" } = {}) {
   const params = new URLSearchParams();
 
   if (sensorId) {
@@ -48,9 +71,7 @@ export function getStats({
 
   const query = params.toString();
 
-  return request(
-    `/stats${query ? `?${query}` : ""}`
-  );
+  return request(`/stats${query ? `?${query}` : ""}`);
 }
 
 export function getReadings({
@@ -75,17 +96,11 @@ export function getReadings({
   }
 
   if (dateFrom) {
-    params.set(
-      "date_from",
-      toBackendUtcDate(dateFrom)
-    );
+    params.set("date_from", toBackendUtcDate(dateFrom));
   }
 
   if (dateTo) {
-    params.set(
-      "date_to",
-      toBackendUtcDate(dateTo)
-    );
+    params.set("date_to", toBackendUtcDate(dateTo));
   }
 
   return request(`/readings?${params.toString()}`);
@@ -96,25 +111,19 @@ export function getSensors(options = {}) {
 }
 
 export function getSensor(sensorId, options = {}) {
-  return request(
-    `/sensors/${encodeURIComponent(sensorId)}`,
-    options
-  );
+  return request(`/sensors/${encodeURIComponent(sensorId)}`, options);
 }
 
 export function updateSensorStatus(sensorId, isActive) {
-  return request(
-    `/sensors/${encodeURIComponent(sensorId)}/status`,
-    {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        is_active: isActive,
-      }),
-    }
-  );
+  return request(`/sensors/${encodeURIComponent(sensorId)}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      is_active: isActive,
+    }),
+  });
 }
 
 export async function exportReadingsCsv({
@@ -130,42 +139,35 @@ export async function exportReadingsCsv({
   }
 
   if (isAnomaly !== null) {
-    params.set(
-      "is_anomaly",
-      String(isAnomaly)
-    );
+    params.set("is_anomaly", String(isAnomaly));
   }
 
   if (dateFrom) {
-    params.set(
-      "date_from",
-      toBackendUtcDate(dateFrom)
-    );
+    params.set("date_from", toBackendUtcDate(dateFrom));
   }
 
   if (dateTo) {
-    params.set(
-      "date_to",
-      toBackendUtcDate(dateTo)
-    );
+    params.set("date_to", toBackendUtcDate(dateTo));
   }
 
   const query = params.toString();
 
   const response = await fetch(
-    `${API_V1}/readings/export${
-      query ? `?${query}` : ""
-    }`
+    `${API_V1}/readings/export${query ? `?${query}` : ""}`,
+    { headers: mergeHeaders() }
   );
 
   if (!response.ok) {
-    const errorPayload = await response
-      .json()
-      .catch(() => null);
+    if (response.status === 403) {
+      throw new ForbiddenError(
+        "Acceso denegado: Se requieren permisos de Administrador."
+      );
+    }
+
+    const errorPayload = await response.json().catch(() => null);
 
     throw new Error(
-      errorPayload?.detail ||
-        "No se pudo exportar el historial."
+      errorPayload?.detail || "No se pudo exportar el historial."
     );
   }
 

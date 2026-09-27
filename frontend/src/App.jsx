@@ -1,17 +1,37 @@
 import { Navigate, Route, Routes } from "react-router";
 
 import { useTheme } from "./hooks/useTheme";
+import { useAuth } from "./auth/AuthContext";
 import AppLayout from "./layouts/AppLayout/AppLayout";
 import DashboardPage from "./pages/DashboardPage/DashboardPage";
 import SensorsPage from "./pages/SensorsPage/SensorsPage";
 import HistoryPage from "./pages/HistoryPage/HistoryPage";
+import LoginPage from "./pages/LoginPage/LoginPage";
+
+function RequireAuth({ children }) {
+  const { session } = useAuth();
+
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 export default function App() {
   useTheme();
 
   return (
     <Routes>
-      <Route element={<AppLayout />}>
+      <Route path="/login" element={<LoginPage />} />
+
+      <Route
+        element={
+          <RequireAuth>
+            <AppLayout />
+          </RequireAuth>
+        }
+      >
         <Route
           index
           element={<Navigate to="/dashboard" replace />}
@@ -28,15 +48,14 @@ export default function App() {
         />
 
         <Route
-          path="*"
-          element={<Navigate to="/dashboard" replace />}
-        />
-
-        <Route
           path="/history"
           element={<HistoryPage />}
         />
-        
+
+        <Route
+          path="*"
+          element={<Navigate to="/dashboard" replace />}
+        />
       </Route>
     </Routes>
   );
