@@ -43,8 +43,8 @@ def _add_anomaly_history(db, sensor_id="SENSOR-001", count=9) -> None:
 
 
 class TestComputeMaintenanceSchedule:
-    def test_returns_schedule_with_default_config(self, client):
-        response = client.post(SCHEDULE_URL)
+    def test_returns_schedule_with_default_config(self, client, auth):
+        response = client.post(SCHEDULE_URL, headers=auth())
 
         assert response.status_code == 200
         body = response.json()
@@ -53,13 +53,14 @@ class TestComputeMaintenanceSchedule:
         assert body["recommended_window_days"] > 0
         assert body["parameters_estimated"] is False
 
-    def test_custom_body_config_is_echoed(self, client):
+    def test_custom_body_config_is_echoed(self, client, auth):
         response = client.post(
             SCHEDULE_URL,
             json={
                 "preventive_cost": 5_000.0,
                 "failure_cost": 50_000.0,
             },
+            headers=auth(),
         )
 
         assert response.status_code == 200
@@ -68,10 +69,10 @@ class TestComputeMaintenanceSchedule:
         assert config["failure_cost"] == 50_000.0
         assert config["min_window_days"] > 0
 
-    def test_anomaly_history_enables_estimation(self, client, db):
+    def test_anomaly_history_enables_estimation(self, client, db, auth):
         _add_anomaly_history(db)
 
-        body = client.post(SCHEDULE_URL).json()
+        body = client.post(SCHEDULE_URL, headers=auth()).json()
 
         assert body["parameters_estimated"] is True
         assert body["weibull_shape"] > 0
@@ -82,26 +83,36 @@ class TestComputeMaintenanceSchedule:
             <= body["maximum_window_days"]
         )
 
-    def test_invalid_config_returns_422(self, client):
+    def test_invalid_config_returns_422(self, client, auth):
         response = client.post(
             SCHEDULE_URL,
             json={
                 "preventive_cost": 10_000.0,
                 "failure_cost": 1_000.0,
             },
+            headers=auth(),
         )
 
         assert response.status_code == 422
 
-    def test_unknown_sensor_returns_404(self, client):
+    def test_unknown_sensor_returns_404(self, client, auth):
         response = client.post(
-            "/api/v1/maintenance/sensors/NO-EXISTE/schedule"
+            "/api/v1/maintenance/sensors/NO-EXISTE/schedule",
+            headers=auth(),
         )
 
         assert response.status_code == 404
         assert "no está registrado" in response.json()["detail"]
 
-    def test_endpoint_is_public(self, client):
+    def test_requires_authentication(self, client):
         response = client.post(SCHEDULE_URL)
 
-        assert response.status_code == 200
+        assert response.status_code == 401
+
+    def test_rejects_invalid_token(self, client):
+        response = client.post(
+            SCHEDULE_URL,
+            headers={"Authorization": "Bearer token-invalido"},
+        )
+
+        assert response.status_code == 401

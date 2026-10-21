@@ -9,6 +9,7 @@ from app.db.session import SessionLocal
 from app.models.reading import Reading
 from app.models.sensor import Sensor
 from app.schemas.reading import SensorReadingIn
+from app.services.alert_policy import should_notify_anomaly
 from app.services.ml_model import AnomalyDetector
 from app.services.telegram_bot import (
     build_alert_message,
@@ -23,12 +24,6 @@ async def process_reading(
     payload: dict,
     detector: AnomalyDetector,
 ) -> dict:
-    """
-    Valida, analiza y procesa una lectura.
-
-    La clasificación normal/anómala es realizada exclusivamente
-    por el modelo de Machine Learning.
-    """
     data = SensorReadingIn(**payload)
 
     db = SessionLocal()
@@ -91,6 +86,13 @@ async def process_reading(
 
     await manager.broadcast(record)
 
+    # Se evalúa con CADA lectura (también las normales) para que el
+    # contador de anomalías consecutivas se reinicie al recuperarse.
+    should_notify = should_notify_anomaly(
+        record["sensor_id"],
+        record["is_anomaly"],
+    )
+
     if record["is_anomaly"]:
         logger.warning(
             "La IA detectó una lectura anómala | "
@@ -103,22 +105,24 @@ async def process_reading(
             record["anomaly_score"],
         )
 
-        message = build_alert_message(
-            sensor_id=record["sensor_id"],
-            temperature=record["temperature"],
-            vibration=record["vibration"],
-            pressure=record["pressure"],
-            score=record["anomaly_score"],
-        )
-
-        sent = await send_telegram_alert(message)
-
-        if sent:
-            logger.info(
-                "Alerta enviada a Telegram | sensor=%s | lectura=%s",
-                record["sensor_id"],
-                record["id"],
+        if should_notify:
+            message = build_alert_message(
+                sensor_id=record["sensor_id"],
+                temperature=record["temperature"],
+                vibration=record["vibration"],
+                pressure=record["pressure"],
+                score=record["anomaly_score"],
             )
+
+            sent = await send_telegram_alert(message)
+
+            if sent:
+                logger.info(
+                    "Alerta enviada a Telegram | "
+                    "sensor=%s | lectura=%s",
+                    record["sensor_id"],
+                    record["id"],
+                )
 
     else:
         logger.info(

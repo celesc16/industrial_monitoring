@@ -1,5 +1,12 @@
 import jwt
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import (
+    Depends,
+    HTTPException,
+    Request,
+    WebSocket,
+    WebSocketException,
+    status,
+)
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -18,21 +25,9 @@ def get_detector(request: Request) -> AnomalyDetector:
     return request.app.state.detector
 
 
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(
-        bearer_scheme
-    ),
-    db: Session = Depends(get_db),
-) -> User:
-    if credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No autenticado.",
-            headers=UNAUTHORIZED_HEADERS,
-        )
-
+def get_user_from_token(token: str, db: Session) -> User:
     try:
-        payload = decode_access_token(credentials.credentials)
+        payload = decode_access_token(token)
     except jwt.PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,6 +51,43 @@ def get_current_user(
         )
 
     return user
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(
+        bearer_scheme
+    ),
+    db: Session = Depends(get_db),
+) -> User:
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No autenticado.",
+            headers=UNAUTHORIZED_HEADERS,
+        )
+
+    return get_user_from_token(credentials.credentials, db)
+
+
+def get_current_ws_user(
+    websocket: WebSocket,
+    db: Session = Depends(get_db),
+) -> User:
+    token = websocket.query_params.get("token")
+
+    if not token:
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="No autenticado.",
+        )
+
+    try:
+        return get_user_from_token(token, db)
+    except HTTPException as exc:
+        raise WebSocketException(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason=exc.detail,
+        ) from exc
 
 
 def get_current_admin_user(

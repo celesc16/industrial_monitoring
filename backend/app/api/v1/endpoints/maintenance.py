@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.core.exceptions import SensorNotFoundError
 from app.db.session import get_db
 from app.domains.maintenance_scheduler.repository import (
@@ -13,6 +14,7 @@ from app.domains.maintenance_scheduler.schemas import (
 from app.domains.maintenance_scheduler.service import (
     MaintenanceOptimizerService,
 )
+from app.models.user import User
 
 router = APIRouter(tags=["maintenance"])
 
@@ -41,6 +43,7 @@ def compute_maintenance_schedule(
         get_maintenance_optimizer_service
     ),
     config: MaintenanceCostConfig | None = Body(default=None),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         effective_config = config or MaintenanceCostConfig()

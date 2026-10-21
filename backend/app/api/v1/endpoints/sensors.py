@@ -13,6 +13,7 @@ from app.services.telegram_bot import (
     build_sensor_status_message,
     send_telegram_alert,
 )
+from app.services.alert_state import reset_sensor_alert
 
 logger = logging.getLogger(__name__)
 

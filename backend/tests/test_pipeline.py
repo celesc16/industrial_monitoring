@@ -8,7 +8,7 @@ from app.core.exceptions import (
     SensorNotFoundError,
 )
 from app.models.sensor import Sensor
-from app.services import pipeline
+from app.services import alert_policy, pipeline
 
 
 class FakeDetector:
@@ -23,6 +23,15 @@ class FakeDetector:
             "is_anomaly": self.is_anomaly,
             "anomaly_score": -0.42 if self.is_anomaly else 0.42,
         }
+
+
+@pytest.fixture(autouse=True)
+def _reset_alert_state():
+    alert_policy._sensor_states.clear()
+
+    yield
+
+    alert_policy._sensor_states.clear()
 
 
 @pytest.fixture
@@ -93,12 +102,12 @@ class TestProcessReadingSuccess:
         sensor = db.get(Sensor, "SENSOR-001")
         assert sensor.last_seen_at is not None
 
-    def test_anomalous_reading_sends_telegram_alert(
+    def test_single_anomaly_does_not_send_alert(
         self, db, patched_pipeline
     ):
         telegram_send, _ = patched_pipeline
 
-        record = _run(
+        _run(
             pipeline.process_reading(
                 {
                     "sensor_id": "SENSOR-001",
@@ -110,9 +119,69 @@ class TestProcessReadingSuccess:
             )
         )
 
+        telegram_send.assert_not_awaited()
+
+    def test_consecutive_anomalies_send_telegram_alert(
+        self, db, patched_pipeline
+    ):
+        telegram_send, _ = patched_pipeline
+
+        payload = {
+            "sensor_id": "SENSOR-001",
+            "temperature": 160.0,
+            "vibration": 20.0,
+            "pressure": 400.0,
+        }
+
+        for _ in range(alert_policy.REQUIRED_CONSECUTIVE_ANOMALIES):
+            record = _run(
+                pipeline.process_reading(
+                    payload,
+                    FakeDetector(is_anomaly=True),
+                )
+            )
+
         assert record["is_anomaly"] is True
         assert record["prediction"] == -1
         telegram_send.assert_awaited_once()
+
+    def test_normal_reading_resets_anomaly_counter(
+        self, db, patched_pipeline
+    ):
+        telegram_send, _ = patched_pipeline
+
+        payload = {
+            "sensor_id": "SENSOR-001",
+            "temperature": 160.0,
+            "vibration": 20.0,
+            "pressure": 400.0,
+        }
+
+        for _ in range(
+            alert_policy.REQUIRED_CONSECUTIVE_ANOMALIES - 1
+        ):
+            _run(
+                pipeline.process_reading(
+                    payload,
+                    FakeDetector(is_anomaly=True),
+                )
+            )
+
+        _run(
+            pipeline.process_reading(
+                payload,
+                FakeDetector(is_anomaly=False),
+            )
+        )
+
+        _run(
+            pipeline.process_reading(
+                payload,
+                FakeDetector(is_anomaly=True),
+            )
+        )
+
+        telegram_send.assert_not_awaited()
 
     def test_reading_queryable_in_new_session(
         self, db, session_factory, patched_pipeline
